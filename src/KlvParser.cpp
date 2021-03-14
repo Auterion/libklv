@@ -144,6 +144,7 @@ KLV* KlvParser::parseByte(uint8_t byte) {
         if(val.size() == val_len) {
             state = STATE_VALUE;
             //printf("KlvParser transitioning to STATE_VALUE\n");
+            [[fallthrough]];
         } else {
             break;
         }
@@ -178,7 +179,7 @@ KLV* KlvParser::parseByte(uint8_t byte) {
             KlvParser sub_klv_parser(std::vector<KeyEncoding>(key_encodings.begin()+1, key_encodings.end()));
             std::vector<KLV*> sub_klvs;
             KLV* sub_klv = NULL;
-            int i = 0;
+            size_t i = 0;
 
             // parse the sub-KLVs
             for(i = 0; i < val.size(); i++) {
