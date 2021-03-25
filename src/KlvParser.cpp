@@ -144,7 +144,11 @@ KLV* KlvParser::parseByte(uint8_t byte) {
         if(val.size() == val_len) {
             state = STATE_VALUE;
             //printf("KlvParser transitioning to STATE_VALUE\n");
+#if defined(__has_cpp_attribute)
+    #if __has_cpp_attribute(fallthrough)
             [[fallthrough]];
+    #endif
+#endif
         } else {
             break;
         }
