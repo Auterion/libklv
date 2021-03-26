@@ -1,6 +1,7 @@
 #ifndef KLV_H
 #define KLV_H
 
+#include <memory>
 #include <stdint.h>
 #include <vector>
 #include <unordered_map>
@@ -45,15 +46,15 @@ public:
     unsigned long getLen() const { return this->len; }
     unsigned long getBerLen() const { return ber_len; }
 
-    KLV* getParent() const { return this->parent; }
-    KLV* getChild() const { return this->child; }
-    KLV* getPrevious() const { return this->previous_sibling; }
-    KLV* getNext() const { return this->next_sibling; }
+    std::shared_ptr<KLV> getParent() const { return this->parent; }
+    std::shared_ptr<KLV> getChild() const { return this->child; }
+    std::shared_ptr<KLV> getPrevious() const { return this->previous_sibling; }
+    std::shared_ptr<KLV> getNext() const { return this->next_sibling; }
 
-    void setParent(KLV* parent) { this->parent = parent; }
-    void setChild(KLV* child) { this->child = child; }
-    void setPreviousSibling(KLV* previous) { this->previous_sibling = previous; }
-    void setNextSibling(KLV* next) { this->next_sibling = next; }
+    void setParent(std::shared_ptr<KLV> parent) { this->parent = parent; }
+    void setChild(std::shared_ptr<KLV> child) { this->child = child; }
+    void setPreviousSibling(std::shared_ptr<KLV> previous) { this->previous_sibling = previous; }
+    void setNextSibling(std::shared_ptr<KLV> next) { this->next_sibling = next; }
 
     std::vector<uint8_t> toBytes();
     std::unordered_map<std::vector<uint8_t>, KLV> indexToMap();
@@ -101,10 +102,10 @@ private:
     std::vector<uint8_t> value;           /// Value (variable-length)
     unsigned long        len;             /// Data length in human-readable format
     unsigned long        ber_len;         /// Length of BER len field
-    KLV*                 parent;          /// parent KLV node, NULL if on top level branch
-    KLV*                 child;           /// first child in branch, NULL if leave node
-    KLV*                 previous_sibling;/// previous KLV node on branch, NULL if none. Typically if first node in branch, this will be NULL
-    KLV*                 next_sibling;    /// next KLV node on branch, NULL if none
+    std::shared_ptr<KLV> parent;          /// parent KLV node, NULL if on top level branch
+    std::shared_ptr<KLV> child;           /// first child in branch, NULL if leave node
+    std::shared_ptr<KLV> previous_sibling;/// previous KLV node on branch, NULL if none. Typically if first node in branch, this will be NULL
+    std::shared_ptr<KLV> next_sibling;    /// next KLV node on branch, NULL if none
 };
 
 
