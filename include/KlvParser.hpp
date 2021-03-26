@@ -10,6 +10,7 @@
 #define KlvParser_hpp
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 #include "Klv.h"
 
@@ -57,7 +58,7 @@ public:
      * @return       the new kLV parsed from the input bytes. NULL if no KLV was
      *               parsed or error occured. Ownership is transfered to the caller.
      */
-    virtual KLV* parseByte(uint8_t byte);
+    virtual std::shared_ptr<KLV> parseByte(uint8_t byte);
 
 protected:
     bool checkIfContainsKlvKey(std::vector<uint8_t> data);
@@ -86,10 +87,10 @@ protected:
     unsigned long        num_ber_len_bytes_read; /// number of bytes read for BER length field
     unsigned long        val_len;         /// length of value field in bytes
     
-    KLV*                 parent;          /// parent KLV node, NULL if on top level branch
-    KLV*                 child;           /// first child in branch, NULL if leave node
-    KLV*                 previous_sibling;/// previous KLV node on branch, NULL if none. Typically if first node in branch, this will be NULL
-    KLV*                 next_sibling;    /// next KLV node on branch, NULL if none
+    std::shared_ptr<KLV> parent;          /// parent KLV node, NULL if on top level branch
+    std::shared_ptr<KLV> child;           /// first child in branch, NULL if leave node
+    std::shared_ptr<KLV> previous_sibling;/// previous KLV node on branch, NULL if none. Typically if first node in branch, this will be NULL
+    std::shared_ptr<KLV> next_sibling;    /// next KLV node on branch, NULL if none
 };
 
 

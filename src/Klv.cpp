@@ -135,8 +135,8 @@ void KLV::addToMap(std::unordered_map<std::vector<uint8_t>, KLV> &map) {
     map[getKey()] = *this;
 
     // recursive depth-first add to map
-    KLV* node = child;
-    while(node != NULL) {
+    std::shared_ptr<KLV> node = child;
+    while(node) {
         node->addToMap(map);
         node = node->getNext();
     }

@@ -42,7 +42,7 @@ KlvParser::~KlvParser() {
  * @return       the new kLV parsed from the input bytes. NULL if no KLV was
  *               parsed or error occured. Ownership is transfered to the caller.
  */
-KLV* KlvParser::parseByte(uint8_t byte) {
+std::shared_ptr<KLV> KlvParser::parseByte(uint8_t byte) {
     ctr++;
     //printf("PARSING BYTE %ld : %x\n", ctr, byte);
     switch(state) {
@@ -157,8 +157,7 @@ KLV* KlvParser::parseByte(uint8_t byte) {
     case STATE_VALUE: {      // read value field
         // construct KLV object
         // TODO: use smart pointer here and transfer ownership to caller
-        KLV *klv = new KLV(key, len, val);
-
+        std::shared_ptr<KLV> klv = std::make_shared<KLV>(key, len, val);
 
         // for right now this will only construct the "root" part of the incoming KLV
         // ...and not recurse into the tree if there is embedded KLV
@@ -181,14 +180,14 @@ KLV* KlvParser::parseByte(uint8_t byte) {
         if(key_encodings.size() > 1) {
             //printf("Creating sub_klv_parser...\n");
             KlvParser sub_klv_parser(std::vector<KeyEncoding>(key_encodings.begin()+1, key_encodings.end()));
-            std::vector<KLV*> sub_klvs;
-            KLV* sub_klv = NULL;
+            std::vector<std::shared_ptr<KLV>> sub_klvs;
+            std::shared_ptr<KLV> sub_klv;
             size_t i = 0;
 
             // parse the sub-KLVs
             for(i = 0; i < val.size(); i++) {
                 sub_klv = sub_klv_parser.parseByte(val[i]);
-                if(sub_klv != NULL) {
+                if(sub_klv) {
                     //printf("new sub KLV\n");
                     sub_klvs.push_back(sub_klv);
                     sub_klv = NULL;
@@ -247,8 +246,8 @@ void KlvParser::resetFields() {
     len.clear();
     val.clear();
 
-    child = NULL;
-    parent = NULL;
-    next_sibling = NULL;
-    previous_sibling = NULL;
+    child = {};
+    parent = {};
+    next_sibling = {};
+    previous_sibling = {};
 }
