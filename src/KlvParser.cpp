@@ -203,7 +203,7 @@ std::shared_ptr<KLV> KlvParser::parseByte(uint8_t byte) {
                     if(i == 0) {
                         // beginning
                         sub_klvs[i]->setNextSibling(sub_klvs[i+1]);
-                    } else if(i == sub_klvs.size()) {
+                    } else if(i == (sub_klvs.size() - 1)) {
                         // end
                         sub_klvs[i]->setPreviousSibling(sub_klvs[i-1]);
                     } else {
