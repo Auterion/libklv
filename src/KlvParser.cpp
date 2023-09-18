@@ -194,24 +194,26 @@ std::shared_ptr<KLV> KlvParser::parseByte(uint8_t byte) {
                 }
             }
 
-            // assign child of THIS klv to the first child in the vector
-            klv->setChild(sub_klvs[0]);
+            if(sub_klvs.size() > 0) {
+                // assign child of THIS klv to the first child in the vector
+                klv->setChild(sub_klvs[0]);
 
-            // assign the next and previous sibling fields and the parent field in each of the sub_klvs
-            for(i = 0; i < sub_klvs.size(); i++) {
-                if(sub_klvs.size() > 1) {
-                    if(i == 0) {
-                        // beginning
-                        sub_klvs[i]->setNextSibling(sub_klvs[i+1]);
-                    } else if(i == (sub_klvs.size() - 1)) {
-                        // end
-                        sub_klvs[i]->setPreviousSibling(sub_klvs[i-1]);
-                    } else {
-                        sub_klvs[i]->setNextSibling(sub_klvs[i+1]);
-                        sub_klvs[i]->setPreviousSibling(sub_klvs[i-1]);
+                // assign the next and previous sibling fields and the parent field in each of the sub_klvs
+                for(i = 0; i < sub_klvs.size(); i++) {
+                    if(sub_klvs.size() > 1) {
+                        if(i == 0) {
+                            // beginning
+                            sub_klvs[i]->setNextSibling(sub_klvs[i+1]);
+                        } else if(i == (sub_klvs.size() - 1)) {
+                            // end
+                            sub_klvs[i]->setPreviousSibling(sub_klvs[i-1]);
+                        } else {
+                            sub_klvs[i]->setNextSibling(sub_klvs[i+1]);
+                            sub_klvs[i]->setPreviousSibling(sub_klvs[i-1]);
+                        }
                     }
+                    sub_klvs[i]->setParent(klv);
                 }
-                sub_klvs[i]->setParent(klv);
             }
         }
         
