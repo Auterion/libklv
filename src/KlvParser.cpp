@@ -115,11 +115,18 @@ std::shared_ptr<KLV> KlvParser::parseByte(uint8_t byte) {
             //printf("BER len: %ld\n", ber_len);
             //printf("KlvParser transitioning to STATE_LEN_HEADER\n");
         } else {
-            state = STATE_LEN;
             val_len = byte & 0b01111111;
-            //printf("BER-Len field is short-form\n");
             //printf("Value length: %ld\n", val_len);
-            //printf("KlvParser transitioning to STATE_LEN\n");
+            if(val_len == 0) {
+                //printf("BER-Len field is zero-length (ZLI)\n");
+                std::shared_ptr<KLV> klv = std::make_shared<KLV>(key, len, val);
+                resetFields();
+                return klv;
+            } else {
+                state = STATE_LEN;
+                //printf("BER-Len field is short-form\n");
+                //printf("KlvParser transitioning to STATE_LEN\n");
+            }
         }
         break;
     }
