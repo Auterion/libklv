@@ -78,7 +78,7 @@ KLV::KLV(const std::vector<uint8_t> key, const std::vector<uint8_t> len, const s
         this->len = len[1];
         for(size_t i = 1; i < ber_len; i++) {
             this->len <<= 8;
-            this->len |= len[2+i];
+            this->len |= len[1+i];
         }
 
     } else {
