@@ -18,8 +18,8 @@ const uint8_t SMPTE_KLV_UL_HEADER[] = {0x06, 0x0E, 0x2B, 0x34};   // SMPTE KLV U
 /**
  * @brief Simple class representing a Key-Length-Value (KLV).
  *
- * Only universal keys (16-bytes long) are supported.
- * Data lengths are Basic-Encoding-Rules (BER) encoded.
+ * Root keys use 16-byte SMPTE universal labels; child (LDS) keys use
+ * BER-OID variable-length encoding. Data lengths are BER-encoded.
  *
  * This class represents KLV in two ways.
  * 1. As a simple data structure where the Key, Length, and Value can be accessed
@@ -45,6 +45,11 @@ public:
     std::vector<uint8_t> getValue() const { return this->value; }
     unsigned long getLen() const { return this->len; }
     unsigned long getBerLen() const { return ber_len; }
+
+    // Decode a well-formed BER-OID key into uint64_t. Returns false for
+    // empty keys, keys longer than 10 bytes, invalid continuation encodings,
+    // or values that overflow uint64_t. `out` is left unchanged on failure.
+    bool getTagAsInt(uint64_t& out) const;
 
     std::shared_ptr<KLV> getParent() const { return this->parent; }
     std::shared_ptr<KLV> getChild() const { return this->child; }

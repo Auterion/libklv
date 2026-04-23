@@ -47,3 +47,78 @@ TEST_F(KlvTest, TestConstruction) {
     EXPECT_THAT(test_klv.getLenEncoded(), ::testing::ContainerEq(len));
     EXPECT_THAT(test_klv.getValue(), ::testing::ContainerEq(val));
 }
+
+TEST_F(KlvTest, GetTagAsInt_SingleByte) {
+    const KLV klv(std::vector<uint8_t>{0x05}, std::vector<uint8_t>{0x00});
+    uint64_t tag = 0;
+    EXPECT_TRUE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 5u);
+}
+
+TEST_F(KlvTest, GetTagAsInt_MultiByte) {
+    // 0x81 0x00 is BER-OID for 128 (1000'0001 0000'0000 -> bits 0000001 0000000).
+    const KLV klv(std::vector<uint8_t>{0x81, 0x00}, std::vector<uint8_t>{0x00});
+    uint64_t tag = 0;
+    EXPECT_TRUE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 128u);
+
+    // 0xC0 0x80 0x00 is BER-OID for 0x100000 = 1048576.
+    const KLV klv2(std::vector<uint8_t>{0xC0, 0x80, 0x00}, std::vector<uint8_t>{0x00});
+    EXPECT_TRUE(klv2.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0x100000u);
+}
+
+TEST_F(KlvTest, GetTagAsInt_EmptyKey) {
+    const KLV klv;
+    uint64_t tag = 0xABCD;
+    EXPECT_FALSE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0xABCDu); // unchanged on failure
+}
+
+TEST_F(KlvTest, GetTagAsInt_UniversalKeyRejected) {
+    // 16-byte universal root keys exceed what getTagAsInt can decode into
+    // a uint64_t without overflow, so they are rejected here.
+    const std::vector<uint8_t> universal = {
+        0x06, 0x0E, 0x2B, 0x34, 0x02, 0x0B, 0x01, 0x01,
+        0x0E, 0x01, 0x03, 0x01, 0x01, 0x00, 0x00, 0x00
+    };
+    const KLV klv(universal, std::vector<uint8_t>{0x00});
+    uint64_t tag = 0xABCD;
+    EXPECT_FALSE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0xABCDu);
+}
+
+TEST_F(KlvTest, GetTagAsInt_NonContinuationFollowedByMore) {
+    // 0x05 has the continuation bit clear, so 0x2A cannot follow it.
+    const KLV klv(std::vector<uint8_t>{0x05, 0x2A}, std::vector<uint8_t>{0x00});
+    uint64_t tag = 0xFEED;
+    EXPECT_FALSE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0xFEEDu);
+}
+
+TEST_F(KlvTest, GetTagAsInt_ContinuationWithNoSuccessor) {
+    // 0x95 has the continuation bit set but nothing follows.
+    const KLV klv(std::vector<uint8_t>{0x95}, std::vector<uint8_t>{0x00});
+    uint64_t tag = 0xFEED;
+    EXPECT_FALSE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0xFEEDu);
+}
+
+TEST_F(KlvTest, GetTagAsInt_FullUint64Range) {
+    // UINT64_MAX encodes as 10 BER-OID bytes: one payload bit in the first
+    // byte, 7 in each of the remaining nine.
+    const KLV klv(std::vector<uint8_t>{0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F},
+                  std::vector<uint8_t>{0x00});
+    uint64_t tag = 0;
+    EXPECT_TRUE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, UINT64_MAX);
+}
+
+TEST_F(KlvTest, GetTagAsInt_OverflowRejected) {
+    // First byte has payload 0x02, so the total exceeds UINT64_MAX.
+    const KLV klv(std::vector<uint8_t>{0x82, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F},
+                  std::vector<uint8_t>{0x00});
+    uint64_t tag = 0xFEED;
+    EXPECT_FALSE(klv.getTagAsInt(tag));
+    EXPECT_EQ(tag, 0xFEEDu);
+}

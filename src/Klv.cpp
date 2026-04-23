@@ -95,6 +95,36 @@ KLV::~KLV() {
     // the external owner of this class must handle that
 }
 
+bool KLV::getTagAsInt(uint64_t& out) const {
+    // widest BER-OID key that can fit in uint64_t.
+    if (this->key.empty() || this->key.size() > 10) {
+        return false;
+    }
+
+    uint64_t acc = 0;
+    for (size_t i = 0; i < this->key.size(); i++) {
+        const uint8_t byte = this->key[i];
+        const bool is_last_byte = (i + 1 == this->key.size());
+        const bool has_continuation_bit = (byte & 0x80) != 0;
+
+        // Valid BER-OID: continuation bit set on every byte except the last.
+        if (has_continuation_bit == is_last_byte) {
+            return false;
+        }
+
+        // Reject 10-byte sequences that would overflow uint64_t (payload
+        // bits shifted past bit 63 would be silently dropped otherwise).
+        if ((acc >> (64 - 7)) != 0) {
+            return false;
+        }
+
+        acc = (acc << 7) | (byte & 0x7f);
+    }
+
+    out = acc;
+    return true;
+}
+
 /**
  * @brief Returns fully encoded raw data of this KLV.
  *
