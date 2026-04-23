@@ -87,7 +87,6 @@ std::shared_ptr<KLV> KlvParser::parseByte(uint8_t byte) {
         }
         case KEY_ENCODING_BER_OID: {
             // keep parsing until we read a byte where bit 8 is 0 (indicating we've read the LSB of the BER-OID key)
-            // TODO: the KLV class actually should have a human-readable tag due to this encoding technique
             if(!(byte & 0b10000000)) {
                 state = STATE_KEY;
                 //printf("KlvParser transitioning to STATE_KEY\n");
