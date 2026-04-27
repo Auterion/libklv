@@ -112,8 +112,8 @@ bool KLV::getTagAsInt(uint64_t& out) const {
             return false;
         }
 
-        // Reject 10-byte sequences that would overflow uint64_t (payload
-        // bits shifted past bit 63 would be silently dropped otherwise).
+        // Reject any BER-OID sequence whose next 7-bit shift would overflow
+        // uint64_t (payload bits past bit 63 would otherwise be dropped).
         if ((acc >> (64 - 7)) != 0) {
             return false;
         }
